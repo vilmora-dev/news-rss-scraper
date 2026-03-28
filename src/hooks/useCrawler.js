@@ -1,0 +1,102 @@
+import { useState, useEffect, useCallback } from "react";
+
+// Keywords for semantic filtering
+const CATEGORY_KEYWORDS = {
+  politics: ['congress', 'senate', 'president', 'election', 'democrat', 'republican',
+    'white house', 'legislation', 'vote', 'campaign', 'government', 'policy',
+    'political', 'biden', 'trump', 'house representative', 'governor', 'mayor',
+    'bill', 'law', 'partisan', 'gop', 'administration', 'lawmaker', 'ballot',
+    'supreme court', 'judiciary', 'federal', 'tariff', 'immigration'],
+
+  science: ['research', 'study', 'scientist', 'discovery', 'experiment', 'nasa',
+    'space', 'physics', 'biology', 'chemistry', 'genome', 'universe', 'planet',
+    'fossil', 'archaeology', 'quantum', 'particle', 'cells', 'brain', 'vaccine',
+    'clinical trial', 'mutation', 'protein', 'telescope', 'asteroid', 'mission',
+    'laboratory', 'hypothesis', 'findings', 'journal', 'published'],
+
+  environment: ['climate', 'carbon', 'emissions', 'global warming', 'fossil fuel',
+    'renewable', 'solar', 'wind energy', 'wildfire', 'drought', 'flood', 'ocean',
+    'species', 'biodiversity', 'pollution', 'epa', 'sustainability', 'deforestation',
+    'glacier', 'arctic', 'weather', 'hurricane', 'tornado', 'coral reef',
+    'methane', 'greenhouse', 'net zero', 'habitat'],
+
+  technology: ['ai', 'artificial intelligence', 'software', 'hardware', 'startup',
+    'silicon valley', 'app', 'data', 'cyber', 'robot', 'automation', 'chip',
+    'semiconductor', 'smartphone', 'electric vehicle', 'tesla', 'apple', 'google',
+    'microsoft', 'meta', 'openai', 'machine learning', 'cloud', 'algorithm',
+    'programming', 'developer', 'blockchain', 'drone', 'autonomous', 'gpt',
+    'llm', 'nvidia', 'model', 'chatbot', 'deepmind'],
+};
+
+function classifyArticle(article) {
+    const text = `${article.title} ${article.description || ''}`.toLowerCase();
+    const scores = {};
+
+    for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)){
+        scores[cat] = keywords.reduce((acc, kw)=>{
+            const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const matches = (text.match(new RegExp(`\\b${escaped}\\b`, 'g')) || []).length;
+            return acc + matches;
+        }, 0);
+    }
+
+    const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1])
+    return sorted[0][1] > 0 ? sorted[0][0] : 'top';
+}
+
+function normalizedItem(raw){
+    const category = classifyArticle(raw);
+    // id, title, description, url, source, publishedAt(timestamp), category 
+    return {
+        id: raw.url || raw.title || Math.random().toString(36), 
+        title: raw.title || 'Untitled', 
+        description: raw.description || '', 
+        url: raw.url, 
+        source: raw.source || 'Unknown',
+        publishedAt: raw.publishedAt ? new Date(raw.publishedAt) : new Date(), 
+        category,
+    }
+}
+
+export function useCrawler(activeSection = 'dashboard') {
+    // articles - errors - loadingState - update(timestamp)
+    const [loading, setLoading] = useState(true); 
+    const [error, setError] = useState(null); 
+    const [articles, setArticles] = useState([]); 
+    const [lastUpdate, setLastUpdate] = useState(null);
+    
+    const fetchArticles = useCallback(async ()=>{
+        setLoading(true);
+        setError(null);
+
+        try{
+            const res = await fetch(`/api/feeds?section=${activeSection}`);
+            if(!res.ok) throw new Error(`Server error: ${res.status}`);
+            const data = await res.json();
+
+            if(data.errors?.length){
+                console.warn(`Some feeds failed: ${data.errors}`);
+            }
+
+            const normalized = (data.items || []).map(normalizedItem);
+
+            setArticles(normalized);
+            setLastUpdate(new Date());
+        }
+        catch(err){
+            setError(err.message);
+            console.log(`Error: ${err.message}`);
+        }
+        finally{
+            setLoading(false);
+        }
+    }, [activeSection]);
+
+    useEffect(() => {
+        fetchArticles();
+        const interval = setInterval(fetchArticles, 5 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, [fetchArticles]);
+    
+    return { articles, loading, error, lastUpdate, refetch: fetchArticles };
+}
