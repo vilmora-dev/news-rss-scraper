@@ -10,8 +10,8 @@ export default function Navbar({activeSection, onToggleSidebar, sidebarCollapsed
         technology: 'Technology',
     };
   return (
-    <header className="fixed top-0 right-0 z-20 h-14 px-4 gap-4 
-        glass-panel border-b border-slate-800/50 flex items-center" 
+    <header className="fixed top-0 right-0 z-20 h-14 px-4 gap-4 bg-slate-800/50
+        glass-panel border-b border-slate-800/50 flex items-center " 
         style={{ left: sidebarCollapsed ? '64px' : '240px', transition: 'left 0.3s ease' }}>
 
         {/* Sidebar toggle */}
@@ -25,7 +25,7 @@ export default function Navbar({activeSection, onToggleSidebar, sidebarCollapsed
 
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 min-w-0 cursor-default">
-            <span className="font-serif text-[10px] tracking-widest uppercase text-slate-500">Tech-Chicken News</span>
+            <span className="font-serif text-[10px] tracking-widest text-slate-500">My News</span>
             <span className="text-slate-400">/</span>
             <span className="font-display text-md font-semibold text-slate-200 truncate tracking-wide">
             {SECTION_LABELS[activeSection] || activeSection}
