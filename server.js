@@ -33,6 +33,7 @@ const FEEDS = {
     'https://feeds.npr.org/1014/rss.xml',
     'https://feeds.bbci.co.uk/news/politics/rss.xml',
     'https://www.politico.com/rss/politicopicks.xml',
+    'https://www.washingtonpost.com/arcio/rss/category/politics/',
   ],
   science: [
     'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml',
@@ -45,12 +46,14 @@ const FEEDS = {
     'https://www.theguardian.com/environment/rss',
     'https://grist.org/feed/',
     'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml',
+    'https://insideclimatenews.org/feed/',
   ],
-  technology: [
-    'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
-    'https://feeds.arstechnica.com/arstechnica/index',
-    'https://techcrunch.com/feed/',
-  ],
+    technology: [
+        'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
+        'https://feeds.arstechnica.com/arstechnica/index',
+        'https://techcrunch.com/feed/',
+        'https://www.wired.com/feed/rss',
+    ],
 };
 
 // In-memory cache: { key: { data, timestamp } }
@@ -86,7 +89,6 @@ function cleanText(html) {
     .slice(0, 240);
 }
 
-
 async function fetchFeed(url) {
     const cached = getCache(url);
     if (cached) return cached;
@@ -104,6 +106,13 @@ async function fetchFeed(url) {
     return items;
 }
 
+async function fetchFeedWithTimeout(url, ms = 5000) {
+    const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Feed timeout')), ms)
+    );
+    return Promise.race([fetchFeed(url), timeout]);
+}
+
 app.get('/api/feeds', async (req, res) => {
     const { section = 'dashboard' } = req.query;
     let feedUrls = [];
@@ -111,7 +120,7 @@ app.get('/api/feeds', async (req, res) => {
         feedUrls = [
             ...FEEDS.top,
             ...FEEDS.politics.slice(0, 2),
-            ...FEEDS.technology.slice(0, 2),
+            ...FEEDS.technology.slice(0, 5),
         ]
     } else if(FEEDS[section]){
         feedUrls = FEEDS[section];
@@ -119,8 +128,8 @@ app.get('/api/feeds', async (req, res) => {
         return res.status(400).json({ error: `Unknown section: ${section}`});
     }
 
-    const results = await Promise.allSettled(feedUrls.map(url => fetchFeed(url)));
-    
+    const results = await Promise.allSettled(feedUrls.map(url => fetchFeedWithTimeout(url)));
+
     const allItems = [];
     const errors = [];
 
@@ -129,7 +138,7 @@ app.get('/api/feeds', async (req, res) => {
             allItems.push(...result.value);
         }else{
             errors.push({ url: feedUrls[i], error: result.reason?.message });
-            console.warn(`[RSS] Failed: ${feedUrls[i]} — ${result.reason?.message}`);
+            console.warn(`Failed: ${feedUrls[i]} — ${result.reason?.message}`);
         }
     });
 
