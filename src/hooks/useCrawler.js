@@ -17,8 +17,9 @@ const CATEGORY_KEYWORDS = {
   environment: ['climate', 'carbon', 'emissions', 'global warming', 'fossil fuel',
     'renewable', 'solar', 'wind energy', 'wildfire', 'drought', 'flood', 'ocean',
     'species', 'biodiversity', 'pollution', 'epa', 'sustainability', 'deforestation',
-    'glacier', 'arctic', 'weather', 'hurricane', 'tornado', 'coral reef',
-    'methane', 'greenhouse', 'net zero', 'habitat'],
+    'glacier', 'arctic', 'weather', 'hurricane', 'tornado', 'coral reef', 'conservation',
+    'methane', 'greenhouse', 'net zero', 'habitat', 'biology', 'botany', 'geology', 
+    'endengered', 'geology', 'rainforest', 'forest', 'environment'], 
 
   technology: ['ai', 'artificial intelligence', 'software', 'hardware', 'startup',
     'silicon valley', 'app', 'data', 'cyber', 'robot', 'automation', 'chip',
