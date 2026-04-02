@@ -1,10 +1,8 @@
-// SectionPage.jsx
 import NewsGrid from './NewsGrid';
-import { Loader } from 'lucide-react';
 
 const SECTION_META = {
   top: {
-    title: 'Top United States',
+    title: 'Top News',
     subtitle: 'Leading stories from across the nation',
     accent: 'text-yellow-200',
     bar: 'bg-yellow-200',
@@ -35,6 +33,12 @@ const SECTION_META = {
   },
 };
 
+function Skeleton({ className = '' }) {
+  return (
+    <div className={`bg-ink-800/60 animate-pulse rounded ${className}`} />
+  );
+}
+
 export default function SectionPage({ section, articles, loading }) {
   const meta = SECTION_META[section] || SECTION_META.top;
 
@@ -51,8 +55,19 @@ export default function SectionPage({ section, articles, loading }) {
 
       {/* Loading */}
       {loading && (
-        <div class="flex items-center justify-center min-h-[200px]">
-          <Loader className='animate-spin h-8 w-8 text-white '/>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {Array.from({ length: 9 }).map((_, i) => 
+          
+            <div className="flex gap-3 p-3 rounded-md bg-ink-800/40 border border-ink-700/30">
+                <Skeleton className="flex-shrink-0 w-20 h-16 rounded-sm" />
+                <div className="flex-1 space-y-2">
+                    <Skeleton className="w-16 h-4" />
+                    <Skeleton className="w-full h-4" />
+                    <Skeleton className="w-4/5 h-4" />
+                    <Skeleton className="w-24 h-3" />
+                </div>
+            </div>
+          )}
         </div>
       )}
 
