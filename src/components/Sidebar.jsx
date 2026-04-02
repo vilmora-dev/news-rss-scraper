@@ -144,7 +144,7 @@ export default function Sidebar({ activeSection, onSectionChange, collapsed, art
         <div className="px-4 py-3 border-t border-ink-700/50">
           <div className="flex items-center gap-2">
             <span 
-              className={`cursor-default inline-block mr-1 animate-pulse transition-colors duration-300 ease-in-out ${health.status == 'ok' ? 'text-green-600 hover:text-green-300' : 'text-red-500'}`}
+              className={`cursor-default inline-block mr-1 animate-pulse transition-colors duration-300 ease-in-out ${health && health.status == 'ok' ? 'text-green-600 hover:text-green-300' : 'text-red-500'}`}
               >●</span>
             <span className="font-serif text-[10px] text-slate-500 tracking-widest uppercase cursor-default">Web Crawler + Scraper</span>
           </div>
