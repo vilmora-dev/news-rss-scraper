@@ -138,3 +138,28 @@ export function useCrawler(activeSection = 'dashboard') {
     
     return { articles, loading, error, lastUpdate, refetch: fetchArticles };
 }
+
+export function useHealth() {
+    const [health, setHealth] = useState(null);
+    const [lastUpdate, setLastUpdate] = useState(null);
+    const [error, setError] = useState(null);
+
+    const pingHealth = useCallback(async () => {
+        try {
+            const res = await fetch('/api/health');
+            const data = await res.json();
+            setHealth(data);
+            setLastUpdate(new Date().toISOString());
+        } catch (err) {
+            console.error(`Health check failed: ${err.message}`);
+            setError(err.message);
+        }
+    }, []);
+
+    // Ping on mount
+    useEffect(() => {
+        pingHealth();
+    }, [pingHealth]);
+
+    return { health, lastUpdate, error, pingHealth };
+}

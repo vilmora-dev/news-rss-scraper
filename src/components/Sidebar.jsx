@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Flag, FlaskConical, Leaf, Cpu,
   ChevronRight, Radio, TrendingUp
 } from 'lucide-react';
+import { useHealth } from '../hooks/useCrawler';
 
 const NAV_ITEMS = [
   {
@@ -30,7 +31,8 @@ const CATEGORY_COLORS = {
 
 export default function Sidebar({ activeSection, onSectionChange, collapsed, articleCounts }) {
   const [expandedGroups, setExpandedGroups] = useState(['dashboard']);
-
+  const { health, lastUpdate, pingHealth } = useHealth();
+  console.log(health);
   const toggleGroup = (id) => {
     setExpandedGroups(prev =>
       prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
@@ -141,7 +143,10 @@ export default function Sidebar({ activeSection, onSectionChange, collapsed, art
       {!collapsed && (
         <div className="px-4 py-3 border-t border-ink-700/50">
           <div className="flex items-center gap-2">
-            <span className="live-dot font-serif text-[10px] text-slate-500 tracking-widest uppercase cursor-default">Web Crawler + Scraper</span>
+            <span 
+              className={`cursor-default inline-block mr-1 animate-pulse transition-colors duration-300 ease-in-out ${health.status == 'ok' ? 'text-green-600 hover:text-green-300' : 'text-red-500'}`}
+              >●</span>
+            <span className="font-serif text-[10px] text-slate-500 tracking-widest uppercase cursor-default">Web Crawler + Scraper</span>
           </div>
         </div>
       )}
