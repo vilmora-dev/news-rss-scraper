@@ -27,13 +27,12 @@ const FEEDS = {
     'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
     'https://feeds.npr.org/1001/rss.xml',
     'https://www.cbsnews.com/latest/rss/main',
+    'https://feeds.bbci.co.uk/news/rss.xml',
   ],
   politics: [
     'https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml',
     'https://feeds.npr.org/1014/rss.xml',
     'https://feeds.bbci.co.uk/news/politics/rss.xml',
-    'https://www.politico.com/rss/politicopicks.xml',
-    'https://www.washingtonpost.com/arcio/rss/category/politics/',
   ],
   science: [
     'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml',
@@ -120,6 +119,8 @@ app.get('/api/feeds', async (req, res) => {
         feedUrls = [
             ...FEEDS.top,
             ...FEEDS.politics.slice(0, 2),
+            ...FEEDS.science.slice(0, 5),
+            ...FEEDS.environment.slice(0, 2),
             ...FEEDS.technology.slice(0, 5),
         ]
     } else if(FEEDS[section]){
