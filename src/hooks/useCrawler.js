@@ -81,7 +81,14 @@ export function useCrawler(activeSection = 'dashboard') {
 
             const normalized = (data.items || []).map(normalizedItem);
 
-            setArticles(normalized);
+            setArticles(prev => {
+                if (prev.length === 0) return normalized;
+                
+                const existingUrls = new Set(prev.map(a => a.url));
+                const hasNewArticles = normalized.some(a => !existingUrls.has(a.url));
+                
+                return hasNewArticles ? normalized : prev;
+            });
             setLastUpdate(new Date());
         }
         catch(err){
