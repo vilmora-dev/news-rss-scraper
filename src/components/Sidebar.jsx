@@ -1,4 +1,3 @@
-// Sidebar.jsx
 import { useState } from 'react';
 import {
   LayoutDashboard, Flag, FlaskConical, Leaf, Cpu,
@@ -12,7 +11,7 @@ const NAV_ITEMS = [
     icon: LayoutDashboard,
     color: 'text-slate-200',
     children: [
-      { id: 'top', label: 'Top United States', icon: Flag },
+      { id: 'top', label: 'Top News', icon: Flag },
       { id: 'politics', label: 'Politics', icon: TrendingUp },
       { id: 'science', label: 'Science', icon: FlaskConical },
       { id: 'environment', label: 'Environment', icon: Leaf },
@@ -22,14 +21,14 @@ const NAV_ITEMS = [
 ];
 
 const CATEGORY_COLORS = {
-  top: 'text-amber-400',
+  top: 'text-yellow-400',
   politics: 'text-orange-400',
   science: 'text-sky-400',
   environment: 'text-green-400',
   technology: 'text-purple-400',
 };
 
-export default function Sidebar({ activeSection, onSectionChange, collapsed }) {
+export default function Sidebar({ activeSection, onSectionChange, collapsed, articleCounts }) {
   const [expandedGroups, setExpandedGroups] = useState(['dashboard']);
 
   const toggleGroup = (id) => {
@@ -103,6 +102,7 @@ export default function Sidebar({ activeSection, onSectionChange, collapsed }) {
                     {group.children.map(child => {
                     const ChildIcon = child.icon;
                     const colorClass = CATEGORY_COLORS[child.id] || 'text-slate-400';
+                    const count = articleCounts?.[child.id] || 0;
                     const isActive = activeSection === child.id;
 
                     return (
@@ -119,7 +119,14 @@ export default function Sidebar({ activeSection, onSectionChange, collapsed }) {
                         >
                         <ChildIcon size={13} className={isActive ? colorClass : 'text-slate-600 group-hover:text-slate-400'} />
                         <span className="flex-1 text-left text-[13px] tracking-wide">{child.label}</span>
-                        
+                        {count > 0 && (activeSection == child.id || activeSection == 'dashboard') && (
+                            <span className={`
+                            font-serif text-[10px] px-1.5 py-0.5 rounded-sm
+                            ${isActive ? `bg-slate-600 ${colorClass}` : 'bg-slate-800 text-slate-600'}
+                            `}>
+                            {count}
+                            </span>
+                        )}
                         </button>
                     );
                     })}
@@ -134,7 +141,7 @@ export default function Sidebar({ activeSection, onSectionChange, collapsed }) {
       {!collapsed && (
         <div className="px-4 py-3 border-t border-ink-700/50">
           <div className="flex items-center gap-2">
-            <span className="live-dot font-serif text-[10px] text-slate-500 tracking-widest uppercase">Web Crawler + Scraper</span>
+            <span className="live-dot font-serif text-[10px] text-slate-500 tracking-widest uppercase cursor-default">Web Crawler + Scraper</span>
           </div>
         </div>
       )}
