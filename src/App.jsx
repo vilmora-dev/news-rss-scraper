@@ -37,7 +37,6 @@ function App() {
     const groups = { top: [], politics: [], science: [], environment: [], technology: [] };
     filteredArticles.forEach(a => {
       if (groups[a.category]) groups[a.category].push(a);
-      console.log(groups);
     });
     return groups;
   }, [filteredArticles]);

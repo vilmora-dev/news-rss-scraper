@@ -29,6 +29,17 @@ export default function NewsCard({ article }) {
             className="group flex flex-col rounded-xl overflow-hidden border border-cyan-700/30 hover:border-cyan-600/50 bg-slate-900/40 hover:bg-slate-800/70 transition-all duration-200 hover:-translate-y-1"
         >
 
+             {/* Background image */}
+            <div className="inset-0">
+                <img
+                    src={article.image}
+                    alt=""
+                    className="w-full h-full max-h-45 object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'; }}
+                />
+                <div className="inset-0 bg-gradient-to-t from-ink-950 via-ink-950/60 to-transparent" />
+            </div>
+
             {/* Content */}
             <div className="flex flex-col flex-1 p-4 gap-2">
                 <div className={`category-badge ${cfg.color} ${cfg.bg} border rounded self-start px-1 tracking-wide font-serif text-xs`}>
