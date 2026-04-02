@@ -45,6 +45,34 @@ function classifyArticle(article) {
     return sorted[0][1] > 0 ? sorted[0][0] : 'top';
 }
 
+const FALLBACK_IMAGES = {
+    politics: [
+        'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80',
+    ],
+    science: [
+        'https://images.unsplash.com/photo-1628595351029-c2bf17511435?w=800&q=80',
+    ],
+    environment: [
+        'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&q=80',
+    ],
+    technology: [
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80',
+    ],
+    top: [
+        'https://images.unsplash.com/photo-1508433957232-3107f5fd5995?w=800&q=80',
+    ],
+};
+
+let _imgCounters = {};
+
+function getFallbackImage(category) {
+  const imgs = FALLBACK_IMAGES[category] || FALLBACK_IMAGES.top;
+  _imgCounters[category] = (_imgCounters[category] || 0);
+  const img = imgs[_imgCounters[category] % imgs.length];
+  _imgCounters[category]++;
+  return img;
+}
+
 function normalizedItem(raw){
     const category = classifyArticle(raw);
     // id, title, description, url, source, publishedAt(timestamp), category 
@@ -56,6 +84,7 @@ function normalizedItem(raw){
         source: raw.source || 'Unknown',
         publishedAt: raw.publishedAt ? new Date(raw.publishedAt) : new Date(), 
         category,
+        image: raw.image || getFallbackImage(category),
     }
 }
 
@@ -69,6 +98,7 @@ export function useCrawler(activeSection = 'dashboard') {
     const fetchArticles = useCallback(async ()=>{
         setLoading(true);
         setError(null);
+         _imgCounters = {};
 
         try{
             const res = await fetch(`/api/feeds?section=${activeSection}`);
