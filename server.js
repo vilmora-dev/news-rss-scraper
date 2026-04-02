@@ -73,6 +73,49 @@ function setCache(key, data){
     cache.set(key, { data, timestamp: Date.now() });
 }
 
+async function fetchOgImage(url) {
+    try {
+        const res = await fetch(url, {
+            headers: { 
+                'User-Agent': 'Mozilla/5.0',
+            }
+        });
+        // Only read enough HTML to find the og:image in the <head>
+        const reader = res.body.getReader();
+        let html = '';
+        while (true) {
+            const { done, value } = await reader.read();
+            html += new TextDecoder().decode(value);
+            // Stop once we're past </head> — no need for the full page
+            if (done || html.includes('</head>')) {
+                reader.cancel();
+                break;
+            }
+        }
+        const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+                   || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+        return match?.[1] ?? null;
+    } catch {
+        return null;
+    }
+}
+
+async function extractImage(item) {
+    const mediaUrl = item.mediaContent?.$?.url ?? '';
+    const thumbUrl = item.mediaThumbnail?.$?.url ?? '';
+    const content  = item['content:encoded'] || item.content || item.summary || '';
+
+    if (mediaUrl) return mediaUrl;
+    if (thumbUrl) return thumbUrl;
+    if (item.enclosure?.url && item.enclosure?.type?.startsWith('image')) return item.enclosure.url;
+
+    const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch) return imgMatch[1];
+
+    const siteImg = await fetchOgImage(item.link || item.guid);
+    return siteImg ?? null;
+}
+
 function cleanText(html) {
   if (!html) return '';
   return html
@@ -93,13 +136,16 @@ async function fetchFeed(url) {
     if (cached) return cached;
     
     const feed = await parser.parseURL(url);
-    const items = (feed.items || []).slice(0, 15).map(item => ({
+    const rawItems = (feed.items || []).slice(0, 15);
+
+    const items = await Promise.all(rawItems.map(async item => ({
         title: item.title || '',
         description: cleanText(item.contentSnippet || item.summary || item.content || ''),
         url: item.link || item.guid || '',
         source: feed.title || new URL(url).hostname.replace('www.', ''),
         publishedAt: item.pubDate || item.isoDate || new Date().toISOString(),
-    }));
+        image: await extractImage(item),
+    })));
 
     setCache(url, items);
     return items;
