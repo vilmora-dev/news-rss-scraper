@@ -9,17 +9,38 @@ import SectionPage from './components/SectionPage';
 function App() {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const { articles, loading, error, lastUpdate } = useCrawler(activeSection);
   
+  // Filter by search query
+  const filteredArticles = useMemo(() => {
+    if (!searchQuery.trim()) return articles;
+    const q = searchQuery.toLowerCase();
+    return articles.filter(a =>
+      a.title.toLowerCase().includes(q) ||
+      a.description?.toLowerCase().includes(q) ||
+      a.source?.toLowerCase().includes(q)
+    );
+  }, [articles, searchQuery]);
+
+  // articleCounts uses filteredArticles too, so they always match
+  const articleCounts = useMemo(() => {
+      const counts = { top: 0, politics: 0, science: 0, environment: 0, technology: 0 };
+      filteredArticles.forEach(a => {
+          if (counts[a.category] !== undefined) counts[a.category]++;
+      });
+      return counts;
+  }, [filteredArticles]);
+
   const grouped = useMemo(() => {
     const groups = { top: [], politics: [], science: [], environment: [], technology: [] };
-    articles.forEach(a => {
+    filteredArticles.forEach(a => {
       if (groups[a.category]) groups[a.category].push(a);
       console.log(groups);
     });
     return groups;
-  }, [articles]);
+  }, [filteredArticles]);
   
   return (
     <div className="min-h-screen bg-slate-800">
@@ -27,12 +48,14 @@ function App() {
         activeSection={activeSection}
         onSectionChange={setActiveSection}
         collapsed={sidebarCollapsed}
+        articleCounts={articleCounts}
       />
 
       <Navbar 
         activeSection={activeSection}
         onToggleSidebar={() => setSidebarCollapsed(s => !s)}
         sidebarCollapsed={sidebarCollapsed}
+        onSearch={setSearchQuery}
       />
 
       <main className={`min-h-screen transition-all duration-300 min-h-screen ${sidebarCollapsed ? 'ml-[64px] pt-[56px]' : 'ml-[240px] mt-[56px] pt-[20px]' }`}>
@@ -56,7 +79,7 @@ function App() {
                   <div key={category}>
                     <NewsGrid
                       articles={articles}
-                      title={category == 'top' ? 'Top US News' : category.charAt(0).toUpperCase() + category.slice(1)}
+                      title={category == 'top' ? 'Top News' : category.charAt(0).toUpperCase() + category.slice(1)}
                       subtitle={`${articles.length} articles`}
                     />
                     <div className="section-divider" />
@@ -71,7 +94,7 @@ function App() {
           {activeSection !== 'dashboard' && (
             <SectionPage
               section={activeSection}
-              articles={articles.filter(a =>
+              articles={filteredArticles.filter(a =>
                 activeSection === 'top' ? a.category === 'top' : a.category === activeSection
               )}
               loading={loading}
