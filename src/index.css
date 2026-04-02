@@ -51,7 +51,6 @@ body {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #ff4d2e;
     margin-right: 6px;
     animation: pulseDot 2s ease-in-out infinite;
 }
