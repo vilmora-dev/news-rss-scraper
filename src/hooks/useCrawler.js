@@ -163,3 +163,33 @@ export function useHealth() {
 
     return { health, lastUpdate, error, pingHealth };
 }
+
+export function useOgImage(articleUrl, existingImage, articleSection) {
+    const [image, setImage] = useState(existingImage || null);
+
+    useEffect(() => {
+        // if already have an image from RSS — don't fetch
+        if (existingImage) {
+            if(!existingImage.includes('npr-rss-pixel')){
+                setImage(existingImage);
+                return;
+            }
+        }
+        if (!articleUrl) return;
+
+        let cancelled = false;
+
+        fetch(`/api/og?url=${encodeURIComponent(articleUrl)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!cancelled && data.image) setImage(data.image);
+            })
+            .catch(() => {
+                image = FALLBACK_IMAGES[articleSection.toLowerCase()]
+            }); 
+
+        return () => { cancelled = true; };
+    }, [articleUrl, existingImage]);
+
+    return image;
+}

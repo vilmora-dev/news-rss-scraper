@@ -1,4 +1,5 @@
 import { ExternalLink, Clock } from 'lucide-react';
+import { useOgImage } from '../hooks/useCrawler';
 
 const CATEGORY_CONFIG = {
     politics:    { color: 'text-orange-400',  bg: 'bg-orange-500/10 border-orange-500/20',   label: 'Politics' },
@@ -20,7 +21,7 @@ function timeAgo(date) {
 
 export default function NewsCard({ article }) {
     const cfg = CATEGORY_CONFIG[article.category] || CATEGORY_CONFIG.top;
-
+    const image = useOgImage(article.url, article.image);
     return (
         <a
             href={article.url}
@@ -32,7 +33,7 @@ export default function NewsCard({ article }) {
              {/* Background image */}
             <div className="inset-0">
                 <img
-                    src={article.image}
+                    src={image}
                     alt=""
                     className="w-full h-full max-h-45 object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'; }}

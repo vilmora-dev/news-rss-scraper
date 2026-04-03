@@ -112,8 +112,7 @@ async function extractImage(item) {
     const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
     if (imgMatch) return imgMatch[1];
 
-    const siteImg = await fetchOgImage(item.link || item.guid);
-    return siteImg ?? null;
+    return null;
 }
 
 function cleanText(html) {
@@ -138,14 +137,14 @@ async function fetchFeed(url) {
     const feed = await parser.parseURL(url);
     const rawItems = (feed.items || []).slice(0, 15);
 
-    const items = await Promise.all(rawItems.map(async item => ({
+    const items = rawItems.map(item => ({
         title: item.title || '',
         description: cleanText(item.contentSnippet || item.summary || item.content || ''),
         url: item.link || item.guid || '',
         source: feed.title || new URL(url).hostname.replace('www.', ''),
         publishedAt: item.pubDate || item.isoDate || new Date().toISOString(),
-        image: await extractImage(item),
-    })));
+        image: extractImage(item), // no await
+    }));
 
     setCache(url, items);
     return items;
@@ -205,6 +204,51 @@ app.get('/api/feeds', async (req, res) => {
         errors: errors.length ? errors : undefined,
         cachedAt: new Date().toISOString(),
     });
+});
+
+const ogCache = new Map();
+const OG_TTL = 60 * 60 * 1000; // 1 hour
+
+app.get('/api/og', async (req, res) => {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: 'url param required' });
+
+    // check cache first
+    const cached = ogCache.get(url);
+    if (cached && Date.now() - cached.ts < OG_TTL) {
+        return res.json({ image: cached.image });
+    }
+
+    try {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(url, {
+            signal: controller.signal,
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
+
+        const reader = response.body.getReader();
+        let html = '';
+        while (true) {
+            const { done, value } = await reader.read();
+            html += new TextDecoder().decode(value);
+            if (done || html.includes('</head>')) {
+                reader.cancel();
+                break;
+            }
+        }
+
+        const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+                   || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+
+        const image = match?.[1] ?? null;
+        ogCache.set(url, { image, ts: Date.now() });
+        res.json({ image });
+
+    } catch (err) {
+        res.json({ image: null }); // just return null (avoids 500 err)
+    }
 });
 
 // GET /api/health
